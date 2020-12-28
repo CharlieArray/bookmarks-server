@@ -129,9 +129,9 @@ bookRouter
     return res.status(404).send("Not Found");
   }
 
-  lists.splice(listIndex, 1);
+  bookmarks.splice(listIndex, 1);
 
-  logger.info(`List with id ${id} deleted.`);
+  logger.info(`bookmark with id ${id} deleted.`);
   res.status(204).end();
 });
 
