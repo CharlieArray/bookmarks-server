@@ -51,14 +51,7 @@ app.use(function validateAPI(req, res, next) {
 });
 
 
-app.use(bookRouter);
-
-bookRouter
-  .route("/")
-  .get((req, res) => {
-  return res.send("Hello, world!");
-  });
-
+  app.use(bookRouter);
 //ROUTE HANDLER GET /bookmarks/:id
 
 // GET METHOD NOT WORKING FOR UNIQUE ID
@@ -71,6 +64,7 @@ bookRouter
     if (!bookmarker) {
       return res.status(404).send("Could not retrieve bookmark");
     }
+
     return res.json(bookmarker);
 
     /* Returns single bookmark with given id
@@ -78,10 +72,9 @@ bookRouter
   });
 
 //ROUTE HANDLER GET /bookmarks
-/*Returns list of books*/
+/*Returns list of bookmarks*/
 bookRouter
   .route(path = "/bookmarks/")
-  //GET method works 
   .get((req, res) => {
     //validate if book list present
     if (!bookmarks) {
@@ -89,7 +82,6 @@ bookRouter
     }
     return res.json(bookmarks);
   })
-  //POST method works
   .post(bodyParser, (req, res) => {
     const { bookmark } = req.body;
 
@@ -115,13 +107,9 @@ bookRouter
   });
 
 //ROUTE HANDLER DELETE /bookmarks/:id
-
-//DELETE method NOT WORKING
 bookRouter
   .route("/bookmarks/:id").delete((req, res) => {
-    
   const { id } = req.params;
-
   const listIndex = bookmarks.findIndex((b) => b.bookID == id);
 
   if (listIndex === -1) {
