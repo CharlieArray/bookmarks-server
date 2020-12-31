@@ -39,11 +39,11 @@ const logger = winston.createLogger({
 
 //INSERT API KEY MIDDLEWEAR HERE
 //ALSO IMPLEMENT LOGGER
-app.use(function validateAPI(req, res, next) {
+app.use(function validateAPIBearer(req, res, next) {
   const apiKEY = process.env.API_TOKEN;
   const apiTOKEN = req.get("Authorization");
 
-  if (!apiKEY || apiKEY !== apiTOKEN) {
+  if (!apiKEY || apiTOKEN.split(' ')[1] !==apiKEY) {
     logger.error(`Unauthorized request to path ${req.path}`);
     return res.status(401).send(`Unauthorized request`);
   }
@@ -112,6 +112,7 @@ bookRouter
   const { id } = req.params;
   const listIndex = bookmarks.findIndex((b) => b.bookID == id);
 
+  //-1 means no index
   if (listIndex === -1) {
     logger.error(`List with id ${id} not found.`);
     return res.status(404).send("Not Found");
