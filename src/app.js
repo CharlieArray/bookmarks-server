@@ -8,6 +8,7 @@ const { v4: uuid } = require("uuid");
 const winston = require("winston");
 const bookRouter = express.Router();
 const bodyParser = express.json();
+const { BookMarksService } = require("./bookmark-service");
 
 const app = express();
 
@@ -18,18 +19,17 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-
-const bookmarks = [
-  {
-    bookmark: "bookmark one",
-    bookID: "6d131c20-336c-4f77-8a34-fdf117e927ef",
-  },
-  {
-    bookmark: "bookmark two",
-    bookID: "gd251d55-336c-4f77-8a34-fdf117e927ef",
-  },
-
-];
+// Utilize database from localhost
+// const bookmarks = [
+//   {
+//     bookmark: "bookmark one",
+//     bookID: "6d131c20-336c-4f77-8a34-fdf117e927ef",
+//   },
+//   {
+//     bookmark: "bookmark two",
+//     bookID: "gd251d55-336c-4f77-8a34-fdf117e927ef",
+//   },
+// ];
 
 const logger = winston.createLogger({
   level: "info",
@@ -43,45 +43,52 @@ app.use(function validateAPIBearer(req, res, next) {
   const apiKEY = process.env.API_TOKEN;
   const apiTOKEN = req.get("Authorization");
 
-  if (!apiKEY || apiTOKEN.split(' ')[1] !==apiKEY) {
+  if (!apiKEY || apiTOKEN.split(" ")[1] !== apiKEY) {
     logger.error(`Unauthorized request to path ${req.path}`);
     return res.status(401).send(`Unauthorized request`);
   }
   next();
 });
 
+app.use(bookRouter);
 
-  app.use(bookRouter);
-//ROUTE HANDLER GET /bookmarks/:id
+// GET METHOD UNIQUE ID
+bookRouter.route("/bookmarks/:id").get((req, res) => {
+  const knexInstance = req.app.get("db");
+  BookMarksService.getById(knexInstance)
+    .then((bookmarks) => {
+      res.json(bookmarks);
+    })
+    .catch(next);
 
-// GET METHOD NOT WORKING FOR UNIQUE ID
-bookRouter
-  .route("/bookmarks/:id")
-  .get((req, res) => {
-    const { id } = req.params;
-    const bookmarker = bookmarks.find((bookmark) => bookmark.bookID == id);
+  // const { id } = req.params;
+  // const getBookmarkID = bookmarks.find((bookmark) => bookmark.bookID == id);
 
-    if (!bookmarker) {
-      return res.status(404).send("Could not retrieve bookmark");
-    }
-
-    return res.json(bookmarker);
-
-    /* Returns single bookmark with given id
-    Returns 404 Not Found if ID is not valid */
-  });
+  // if (!getBookmarkID) {
+  //   return res.status(404).send("Could not retrieve bookmark");
+  // }
+  // return res.json(getBookmarkID);
+});
 
 //ROUTE HANDLER GET /bookmarks
 /*Returns list of bookmarks*/
 bookRouter
-  .route(path = "/bookmarks/")
+  .route((path = "/bookmarks/"))
   .get((req, res) => {
-    //validate if book list present
-    if (!bookmarks) {
-      return res.status(404).send("Could not retrieve bookmark list");
-    }
-    return res.json(bookmarks);
+    const knexInstance = req.app.get("db");
+    BookMarksService.getAllBookmarks(knexInstance)
+      .then((bookmarks) => {
+        res.json(bookmarks);
+      })
+      .catch(next);
+
+    // //validate if book list present
+    // if (!bookmarks) {
+    //   return res.status(404).send("Could not retrieve bookmark list");
+    // }
+    // return res.json(bookmarks);
   })
+
   .post(bodyParser, (req, res) => {
     const { bookmark } = req.body;
 
@@ -107,8 +114,7 @@ bookRouter
   });
 
 //ROUTE HANDLER DELETE /bookmarks/:id
-bookRouter
-  .route("/bookmarks/:id").delete((req, res) => {
+bookRouter.route("/bookmarks/:id").delete((req, res) => {
   const { id } = req.params;
   const listIndex = bookmarks.findIndex((b) => b.bookID == id);
 
