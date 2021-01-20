@@ -47,7 +47,7 @@ app.use(bookRouter);
 
 // GET single bookmark
 bookRouter
-.route("/bookmarks/:id")
+.route("/api/bookmarks/:id")
 .get((req, res, next) => {
   const knexInstance = req.app.get("db");
   const {id} = req.params;
@@ -60,7 +60,7 @@ bookRouter
 
 // GET all bookmarks
 bookRouter
-  .route("/bookmarks")
+  .route("/api/bookmarks")
   .get((req, res, next) => {
     const knexInstance = req.app.get("db");
     BookMarksService.getAllBookmarks(knexInstance)
@@ -72,15 +72,15 @@ bookRouter
 
 // POST request for new bookmark
   bookRouter
-   .route('/bookmarks')
+   .route('/api/bookmarks')
    .post(bodyParser, (req, res, next) => {
     const knexInstance = req.app.get("db");
-    const {bookmark_name} = req.body;
-    const bookmark = {bookmark_name}
+    const {bookmark_name, url, description, rating} = req.body;
     const book_id = uuid();
+    const bookmark = {bookmark_name, book_id, url, description, rating}
     console.log(book_id)
 
-    BookMarksService.addBookmark(knexInstance, bookmark, book_id)
+    BookMarksService.addBookmark(knexInstance, bookmark)
       .then((bookmarks) =>{
         res.status(201);
         res.json(bookmarks)
@@ -90,7 +90,7 @@ bookRouter
    
 // DELETE /bookmarks/:id
 bookRouter
-.route("/bookmarks/:id")
+.route("/api/bookmarks/:id")
 .delete((req, res, next) => {
   const knexInstance = req.app.get("db");
   const { id } = req.params;
@@ -103,6 +103,34 @@ bookRouter
     .catch(next) 
   
 });
+
+// PATCH request /bookmarks/
+bookRouter
+.route("/api/bookmarks/:id")
+.patch((req, res, next) => {
+  const knexInstance = req.app.get("db");
+  const { id } = req.params;
+  const {bookmark_name, book_id} = req.body;
+  
+  if(!bookmark_name && !book_id){
+    return res.status(400).send("Status 400")
+  }
+  const bookmark = {}
+  if (bookmark_name){
+    bookmark.bookmark_name = bookmark_name
+  }
+  if (book_id){
+    bookmark.book_id = book_id
+  }
+
+  BookMarksService.patchBookmark(knexInstance, id, bookmark)
+    .then((bookmarks) => {
+      res.status(204);
+      res.json(bookmarks)
+    })
+    .catch(next) 
+});
+
 
 app.use(function errorHandler(error, req, res, next) {
   let response;

@@ -11,9 +11,9 @@ const BookMarksService = {
     .where("id", id)
     .first();
   },
-  addBookmark(knex, bookmark, book_id) {
+  addBookmark(knex, bookmark) {
     return knex("bookmarks")
-    .insert(bookmark, book_id)
+    .insert(bookmark)
     .returning("*");
   },
   removeBookmark(knex, id) {
@@ -21,6 +21,10 @@ const BookMarksService = {
     .where("id", id)
     .del();
   },
-};
-
+  patchBookmark(knex, id, bookmark){
+    return knex("bookmarks")
+    .where("id", id)
+    .update(bookmark)
+  }
+}
 module.exports = { BookMarksService };
